@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 import './BirthdaySnakeGame.css';
 
 const GRID_SIZE = 20;
@@ -10,14 +11,15 @@ const WINNING_SCORE = 18;
 
 const BirthdaySnakeGame = () => {
   const canvasRef = useRef(null);
-  const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'gameOver'
+  const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'gameOver', 'won'
   const [score, setScore] = useState(0);
   const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
   const [direction, setDirection] = useState('right');
   const [food, setFood] = useState({ x: 15, y: 15 });
   const [particles, setParticles] = useState([]);
   const [isStarting, setIsStarting] = useState(false);
-  const navigate = useNavigate();
+  const { width, height } = useWindowSize();
+  const navigate = useNavigate(); // Re-added useNavigate
 
   // Game loop
   useEffect(() => {
@@ -184,6 +186,7 @@ const BirthdaySnakeGame = () => {
     setFood(newFood);
   };
 
+  // Keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
       switch (e.key) {
@@ -196,6 +199,58 @@ const BirthdaySnakeGame = () => {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [direction]);
+
+  // Touch/Swipe input
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      e.preventDefault(); // Prevent scrolling
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+
+      if (Math.abs(dx) > Math.abs(dy)) { // Horizontal swipe
+        if (dx > 0 && direction !== 'left') {
+          setDirection('right');
+        } else if (dx < 0 && direction !== 'right') {
+          setDirection('left');
+        }
+      } else { // Vertical swipe
+        if (dy > 0 && direction !== 'up') {
+          setDirection('down');
+        } else if (dy < 0 && direction !== 'down') {
+          setDirection('up');
+        }
+      }
+    };
+
+    const gameContainer = document.querySelector('.game-container');
+    if (gameContainer) {
+      gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+      gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+      gameContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+
+    return () => {
+      if (gameContainer) {
+        gameContainer.removeEventListener('touchstart', handleTouchStart);
+        gameContainer.removeEventListener('touchmove', handleTouchMove);
+        gameContainer.removeEventListener('touchend', handleTouchEnd);
+      }
+    };
   }, [direction]);
 
   const resetGame = () => {
@@ -215,8 +270,8 @@ const BirthdaySnakeGame = () => {
     <div className={`game-container`}>
       {gameState === 'start' && (
         <div className="start-screen">
-          <h1>Dekh mai kitna accha hu na bbg?</h1>
-          <button onClick={resetGame}>Choke me</button>
+          <h1>Cyber Snake Challenge</h1>
+          <button onClick={resetGame}>Start Game</button>
         </div>
       )}
 
