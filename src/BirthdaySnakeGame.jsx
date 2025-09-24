@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import './BirthdaySnakeGame.css';
 
 const GRID_SIZE = 20;
@@ -19,7 +20,7 @@ const BirthdaySnakeGame = () => {
   const [particles, setParticles] = useState([]);
   const [isStarting, setIsStarting] = useState(false);
   const { width, height } = useWindowSize();
-  const navigate = useNavigate(); // Re-added useNavigate
+  const navigate = useNavigate();
 
   // Game loop
   useEffect(() => {
@@ -186,7 +187,6 @@ const BirthdaySnakeGame = () => {
     setFood(newFood);
   };
 
-  // Keyboard input
   useEffect(() => {
     const handleKeyDown = (e) => {
       switch (e.key) {
